@@ -1,15 +1,18 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
   <todos-list></todos-list>
+  <chat></chat>
 </template>
 
 <script>
-import TodosList from './components/TodosList.vue'
+import TodosList from './components/TodosList.vue';
+import Chat from './components/ChatComponent.vue';
 
 export default {
   name: 'App',
   components: {
-    TodosList
+    TodosList,
+    Chat
   }
 }
 </script>

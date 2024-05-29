@@ -105,13 +105,30 @@ app.post('/refresh-token', async (req, res) => {
     }
 })
 
+
 //Server UP
 app.listen(3000, async () => {
     await init();
 });
 
+const messages = ['Test msg.', 'Can I help you?']
 //Socket UP
 io.on('connection', (socket) => {
-    console.log("IO connection is ready", socket);
+    //console.log("IO connection is ready", socket); 
+    socket.emit('connected', {
+        message: "IO connection is ready",
+        messages: messages,
+    });
+
+    socket.on('message', (arg) => {
+        console.log(arg);
+        socket.join("room:" + arg.roomId);
+        socket.emit('message', `${socket.id}: ${arg.msg}`);
+        socket.to("room:" + arg.roomId).emit('message', `${socket.id}: ${arg.msg}`);
+    });
+
+    socket.on('disconnect', (reason) => {
+        console.log("Клиент был отключен: " + reason)
+    });
 })
 httpServer.listen(3001);

@@ -27,8 +27,8 @@
                 .then((result) => {
                     todos.value = result.data;
                     console.log(todos.value);
-                })
-    })
+                });
+    });
 </script>
 
 <style>
