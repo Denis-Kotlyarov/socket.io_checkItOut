@@ -1,22 +1,21 @@
 <template class="rel">
     <main class="chat" v-show="showChat" @click.stop="showChat = !showChat">
         <div class="chat_body" @click.stop>
-            <h1>{{ chatTitle }}, online: {{ onl }}</h1>
+            <h1>{{ chatTitle }}</h1>
             <ul class="msg-list">
                 <li v-for="message in messages" :key="message">
                     <p>{{ message }}</p>
                 </li>
             </ul>
             <form action="">
-                <input class="room-id" type="number" min="1" max="5" v-model="roomId" placeholder="Id"/>
+                <input class="room-id" type="text" v-model="roomId"/>
                 <input class="text-field" type="text" v-model="newMassage"/>
                 <button class="btn" @click.prevent="sendMessage">Send</button>
-                <input class="text-field" type="text" v-model="roomId" placeholder="prvChat"/>
             </form>
         </div>
     </main>
 
-    <button class="show-btn" @click="showChat = !showChat">Chat</button>
+    <button class="show-btn" @click="showChat = !showChat">PrivateChat</button>
 </template>
 
 <script setup>
@@ -29,13 +28,11 @@
     const newMassage = ref(null);
     const showChat = ref(false);
     const roomId = ref(null);
-    const chatTitle = ref('Поддержка');
-    const onl = ref(0);
+    const chatTitle = ref('');
 
     const socket = io('http://localhost:3001');
     socket.on('connected', (arg) => {
         console.log(arg);
-        messages.value = arg.messages
     });
     socket.on('disconnect', (reason) => {
         alert("Соединение потеряно: " + reason);
@@ -43,9 +40,6 @@
     socket.on('message', (arg) => {
         chatTitle.value = arg.room;
         messages.value.push(arg.msg);
-    })
-    socket.on('online', (arg) => {
-        onl.value = arg;
     })
 
     function sendMessage() {
@@ -59,7 +53,7 @@
     };
 </script>
 
-<style>
+<style scoped>
     .rel {
         position: relative;
         overflow: auto;
@@ -88,6 +82,7 @@
         font-size: 16px;
     }
     .room-id {
+        min-width: 80px;
         margin-right: 20px;
         font-size: 16px; 
     }
@@ -101,7 +96,7 @@
         position: fixed;
         padding: 25px;
         border-radius: 100%;
-        right: 3%;
+        right: 86%;
         bottom: 9%;
     }
     .msg-list {

@@ -19,7 +19,7 @@
 
     const todos = ref(null);
 
-    const socket = io('http://localhost:3001');
+    // const socket = io('http://localhost:3001');
     
     onMounted(() => {
         fetch('http://localhost:3000/todos/')

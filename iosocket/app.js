@@ -12,9 +12,14 @@ app.use(express.json())
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: 'http://localhost:8080'
+        origin: ['http://localhost:8080', "https://admin.socket.io"]
     }
 })
+const { instrument } = require("@socket.io/admin-ui");
+instrument(io, {
+    auth: false,
+    mode: "development",
+});
 
 //Cors
 const cors = require('cors');
@@ -111,9 +116,13 @@ app.listen(3000, async () => {
     await init();
 });
 
-const messages = ['Test msg.', 'Can I help you?']
+const messages = ['Test msg.', 'Can I help you?'];
+
 //Socket UP
+let activeRoom = 0;
 io.on('connection', (socket) => {
+    console.log(socket.id)
+    
     //console.log("IO connection is ready", socket); 
     socket.emit('connected', {
         message: "IO connection is ready",
@@ -122,13 +131,26 @@ io.on('connection', (socket) => {
 
     socket.on('message', (arg) => {
         console.log(arg);
-        socket.join("room:" + arg.roomId);
-        socket.emit('message', `${socket.id}: ${arg.msg}`);
-        socket.to("room:" + arg.roomId).emit('message', `${socket.id}: ${arg.msg}`);
+        activeRoom = "room:" + arg.roomId;
+        socket.join(activeRoom);
+        
+        socket.emit('message', {
+            room: "room:" + arg.roomId,
+            msg: `${socket.id}: ${arg.msg}`,
+        });
+        socket.to("room:" + arg.roomId).emit('message', {
+            room: "room:" + arg.roomId,
+            msg: `${socket.id}: ${arg.msg}`,
+        });
     });
 
     socket.on('disconnect', (reason) => {
         console.log("Клиент был отключен: " + reason)
     });
+
+    setInterval( async () => {
+        const sockets = await io.in(activeRoom).fetchSockets();
+        socket.to(activeRoom).emit('online', sockets.length);
+    }, 5000)
 })
 httpServer.listen(3001);
