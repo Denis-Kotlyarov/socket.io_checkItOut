@@ -3,15 +3,16 @@
         <div class="chat_body" @click.stop>
             <h1>{{ chatTitle }}, online: {{ onl }}</h1>
             <ul class="msg-list">
-                <li v-for="message in messages" :key="message">
-                    <p>{{ message }}</p>
+                <li v-for="message in messages" :key="message.id">
+                    <p>{{ message.UserId }}: {{ message.body }}</p>
                 </li>
             </ul>
             <form action="">
-                <input class="room-id" type="number" min="1" max="5" v-model="roomId" placeholder="Id"/>
-                <input class="text-field" type="text" v-model="newMassage"/>
-                <button class="btn" @click.prevent="sendMessage">Send</button>
-                <input class="text-field" type="text" v-model="roomId" placeholder="prvChat"/>
+                <input class="room-id" type="number" min="1" max="5" v-model="roomId" placeholder="room"/>
+                <input class="text-field" type="text" v-model="newMassage" placeholder="Сообщение"/>
+                <button class="btn" @click.prevent="sendMessage">В комнату</button>
+                <input class="text-field" type="text" v-model="toUserMail" placeholder="Почта для личного сообщения"/>
+                <button class="btn" @click.prevent="sendPrvMessage">На почту</button>
             </form>
         </div>
     </main>
@@ -31,6 +32,13 @@
     const roomId = ref(null);
     const chatTitle = ref('Поддержка');
     const onl = ref(0);
+    const toUserMail = ref('');
+    let user = ''
+
+    onMounted(() => {
+        user = localStorage.getItem('user');
+        console.log(user)
+    })
 
     const socket = io('http://localhost:3001');
     socket.on('connected', (arg) => {
@@ -43,10 +51,14 @@
     socket.on('message', (arg) => {
         chatTitle.value = arg.room;
         messages.value.push(arg.msg);
-    })
+    });
+    socket.on('private-chat-response', (arg) => {
+        chatTitle.value = arg.ToId;
+        messages.value = arg.data;
+    });
     socket.on('online', (arg) => {
         onl.value = arg;
-    })
+    });
 
     function sendMessage() {
         if (newMassage.value && roomId.value) {
@@ -57,6 +69,16 @@
             newMassage.value = null;
         }
     };
+    function sendPrvMessage() {
+        if (newMassage.value && toUserMail.value) {
+            socket.emit('private-message', {
+                msg: newMassage.value,
+                fromMail: user,
+                toMail: toUserMail.value,
+            });
+            newMassage.value = null;
+        }
+    }
 </script>
 
 <style>
@@ -106,5 +128,7 @@
     }
     .msg-list {
         list-style: none;
+        max-height: 400px;
+        overflow-y: auto;
     }
 </style>

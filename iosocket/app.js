@@ -1,7 +1,8 @@
 const express = require('express');
-const { init, User, Todo } = require('./models/init');
+const { init, User, Todo, Message } = require('./models/init');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const axios = require('axios');
 
 //Inialize express
 const app = express();
@@ -12,7 +13,8 @@ app.use(express.json())
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:8080', "https://admin.socket.io"]
+        origin: ['http://localhost:8080', "https://admin.socket.io"],
+        credentials: true
     }
 })
 const { instrument } = require("@socket.io/admin-ui");
@@ -30,6 +32,8 @@ const users = require('./routes/users');
 app.use('/users', users);
 const todos = require('./routes/todos');
 app.use('/todos', todos);
+const messages = require('./routes/messages');
+app.use('/messages', messages);
 
 //РЕГИСТРАЦИОННЫЕ_ЛОГИОННЫЕ ТАНЦЫ
 const crypto = require('crypto');
@@ -116,7 +120,7 @@ app.listen(3000, async () => {
     await init();
 });
 
-const messages = ['Test msg.', 'Can I help you?'];
+//onst mes = ['Test msg.', 'Can I help you?'];
 
 //Socket UP
 let activeRoom = 0;
@@ -126,7 +130,7 @@ io.on('connection', (socket) => {
     //console.log("IO connection is ready", socket); 
     socket.emit('connected', {
         message: "IO connection is ready",
-        messages: messages,
+        //messages: mes,
     });
 
     socket.on('message', (arg) => {
@@ -143,6 +147,40 @@ io.on('connection', (socket) => {
             msg: `${socket.id}: ${arg.msg}`,
         });
     });
+
+    socket.on('private-message', async (arg) => {
+        try {
+            let UserId = await axios.post('http://localhost:3000/users/email', {
+                email: arg.fromMail
+            });
+            UserId = UserId.data.id;
+
+            let ToId = await axios.post('http://localhost:3000/users/email', {
+                email: arg.toMail
+            });
+            ToId = ToId.data.id;
+
+            await axios.post('http://localhost:3000/messages/push', { 
+                body: arg.msg,
+                UserId: UserId,
+                ToId: ToId,
+            });
+
+            const msg = await axios.post('http://localhost:3000/messages/all', {
+                UserId: UserId,
+                ToId: ToId,
+            });
+            console.log(msg);
+
+            socket.emit('private-chat-response', { 
+                data: msg.data,
+                ToId: arg.toMail,
+            });
+        } catch (error) {
+            console.log(error);
+        }
+        
+    })
 
     socket.on('disconnect', (reason) => {
         console.log("Клиент был отключен: " + reason)

@@ -78,6 +78,31 @@ class UsersController {
             //throw error;
         }
     }
+
+    async findByEmail(req, res) {
+        try {
+            const user = await User.findOne({ where: { email: req.body.email } });
+            
+            if (user !== null) {
+                return res.send(user);
+            } else {
+                return res.send(null)
+            }
+        } catch (error) {
+            console.error(error);
+            return res.send('Ошибка');
+        }
+    }
+
+    async hashPassword(req, res) {
+        try {
+            const hashPassword = crypto.createHash('sha256').update(req.body.password).digest('hex');
+            return res.send(hashPassword)
+        } catch (error) {
+            console.error(error);
+            return res.send('Ошибка');
+        }
+    }
 }
 
 module.exports = UsersController;

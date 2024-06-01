@@ -1,8 +1,11 @@
 const User = require('./User');
 const Todo = require('./Todo');
+const Message = require('./Message');
 
 User.hasMany(Todo);
+User.hasMany(Message);
 Todo.belongsTo(User);
+Message.belongsTo(User);
 
 const init = async () => {
     //Synchronizahen
@@ -17,6 +20,11 @@ const init = async () => {
         alter: false,
         force: false
     });
+    await Message.sync({
+        //Parameters - принудительно обновить, перезаписать таблицу
+        alter: false,
+        force: false
+    });
 }
 
-module.exports = { init, User, Todo };
+module.exports = { init, User, Todo, Message };

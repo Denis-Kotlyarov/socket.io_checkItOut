@@ -7,6 +7,8 @@ const UsersController = new (require('../controllers/userControllers'));
 router.get('/', UsersController.getAll);
 
 router.post('/', UsersController.pushUser);
+router.post('/email', UsersController.findByEmail);
+router.post('/password', UsersController.hashPassword);
 
 router.put('/:id', UsersController.updateUser);
 
